@@ -127,8 +127,10 @@ fn format_loads(loads: &[u64; 3]) -> String {
 }
 
 fn format_duration(input: TimeDelta) -> String {
-    let day_part = if input.num_days() != 0 {
+    let day_part = if input.num_days() > 0 {
         format!("{} days, ", input.num_days())
+    } else if input.num_days() == 1{
+        "1 day, ".to_string()
     } else {
         "".to_string()
     };
