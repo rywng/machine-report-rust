@@ -1,10 +1,10 @@
 use std::io::{self, Write, stdout};
 
-use chrono::{NaiveDateTime, TimeDelta};
+use chrono::TimeDelta;
 use crossterm::{
     ExecutableCommand, QueueableCommand,
     cursor::{self, MoveRight, MoveToColumn, MoveToNextLine},
-    style::{self, Print, PrintStyledContent, Stylize},
+    style::{Print, PrintStyledContent, Stylize},
     terminal,
 };
 use rustix::system::{sysinfo, uname};
@@ -33,7 +33,7 @@ enum RowItem {
     LineBreak,
 }
 
-fn get_width(device_info: &Box<[RowItem]>) -> (u16, u16) {
+fn get_width(device_info: &[RowItem]) -> (u16, u16) {
     let t_col = device_info
         .iter()
         .map(|i| match i {
@@ -60,7 +60,7 @@ fn round_up(i: usize) -> usize {
 }
 
 fn get_device_info() -> io::Result<Box<[RowItem]>> {
-    let mut res: Vec<RowItem> = Vec::new();
+    let mut res: Vec<RowItem> = Vec::with_capacity(16);
 
     append_uname(&mut res);
     res.push(RowItem::LineBreak);
@@ -98,7 +98,14 @@ fn append_sysinfo(res: &mut Vec<RowItem>) {
             sysinfo.totalram / 1024 / 1024
         ),
     ));
-    res.push(RowItem::KV("Swap", format!("{} / {} Mi (Free / Total)", sysinfo.freeswap / 1024 / 1024, sysinfo.totalswap / 1024 / 1024)));
+    res.push(RowItem::KV(
+        "Swap",
+        format!(
+            "{} / {} Mi (Free / Total)",
+            sysinfo.freeswap / 1024 / 1024,
+            sysinfo.totalswap / 1024 / 1024
+        ),
+    ));
     res.push(RowItem::KV("Procs", sysinfo.procs.to_string()));
 }
 
