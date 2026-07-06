@@ -1,7 +1,8 @@
 [package]
-name = "learn_crossterm"
+name = "machine-report"
 version = "0.1.0"
 edition = "2024"
+description = "Rust implementation of USGC's machine report"
 
 [dependencies]
 anyhow = "1.0.103"
