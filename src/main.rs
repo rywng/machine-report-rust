@@ -93,13 +93,13 @@ fn append_sysinfo(res: &mut Vec<RowItem>) {
     res.push(RowItem::KV(
         "RAM",
         format!(
-            "{} / {} / {} / {} MB (Free / Share / Buf / Total)",
+            "{} / {} Mi (Free / Total)",
             sysinfo.freeram / 1024 / 1024,
-            sysinfo.sharedram / 1024 / 1024,
-            sysinfo.bufferram / 1024 / 1024,
             sysinfo.totalram / 1024 / 1024
         ),
     ));
+    res.push(RowItem::KV("Swap", format!("{} / {} Mi (Free / Total)", sysinfo.freeswap / 1024 / 1024, sysinfo.totalswap / 1024 / 1024)));
+    res.push(RowItem::KV("Procs", sysinfo.procs.to_string()));
 }
 
 fn format_loads(loads: &[u64; 3]) -> String {
