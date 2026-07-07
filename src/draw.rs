@@ -1,15 +1,15 @@
 use chrono::TimeDelta;
 use crossterm::QueueableCommand;
-use crossterm::cursor;
 use crossterm::cursor::MoveRight;
 
 use crossterm::cursor::MoveToColumn;
 use crossterm::cursor::MoveToNextLine;
+use crossterm::cursor::MoveUp;
 use crossterm::style::PrintStyledContent;
 
 use crossterm::style::Print;
 use crossterm::style::Stylize;
-use crossterm::terminal;
+use crossterm::terminal::ScrollUp;
 
 use std::io;
 use std::io::Write;
@@ -23,8 +23,13 @@ pub fn draw_report(
     dev_info: Box<[RowItem]>,
 ) -> Result<(), anyhow::Error> {
     let (cols, t_col) = get_width(&dev_info);
-    output.queue(terminal::Clear(terminal::ClearType::All))?;
-    output.queue(cursor::MoveTo(0, 0))?;
+
+    let lines_needed: u16 = dev_info.len() as u16 + 5; // 2x content top / bottom divider, 3x header
+
+    output
+        .queue(ScrollUp(lines_needed))?
+        .queue(MoveUp(lines_needed))?
+        .queue(MoveToColumn(0))?;
     draw::draw_header(&mut output, cols, t_col)?;
     draw::draw_device_info(&mut output, t_col, cols, dev_info)?;
     draw::draw_footer(&mut output, cols, t_col)?;
@@ -134,7 +139,10 @@ pub(crate) fn draw_footer(output: &mut dyn Write, width: u16, t_col: u16) -> io:
     }
     output.queue(Print('┘'))?;
 
-    output.queue(MoveToColumn(t_col))?.queue(Print('┴'))?;
+    output
+        .queue(MoveToColumn(t_col))?
+        .queue(Print('┴'))?
+        .queue(MoveToNextLine(1))?;
 
     Ok(())
 }

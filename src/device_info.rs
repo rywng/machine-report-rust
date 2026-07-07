@@ -58,4 +58,3 @@ pub(crate) fn append_sysinfo(res: &mut Vec<RowItem>) {
     ));
     res.push(RowItem::KV("Procs", sysinfo.procs.to_string()));
 }
-
