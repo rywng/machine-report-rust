@@ -1,25 +1,18 @@
 use chrono::Local;
-use chrono::TimeDelta;
-use crossterm::QueueableCommand;
-use crossterm::cursor;
-use crossterm::cursor::MoveRight;
 
-use crossterm::cursor::MoveToColumn;
-use crossterm::cursor::MoveToNextLine;
-use crossterm::cursor::MoveUp;
+use crossterm::{
+    QueueableCommand,
+    cursor::{self, MoveRight, MoveToColumn, MoveToNextLine, MoveUp},
+    style::{Print, StyledContent, Stylize},
+    terminal::{self, ScrollUp},
+};
 
-use crossterm::style::Print;
-use crossterm::style::StyledContent;
-use crossterm::style::Stylize;
-use crossterm::terminal;
-use crossterm::terminal::ScrollUp;
 use iana_time_zone::get_timezone;
 
-use std::fmt::Display;
-use std::io;
-use std::io::Write;
-
-use crate::draw;
+use std::{
+    fmt::Display,
+    io::{self, Write},
+};
 
 use super::RowItem;
 
@@ -39,14 +32,14 @@ pub fn draw_report(
     }
 
     output.queue(MoveToColumn(0))?;
-    draw::draw_header(&mut output, cols, t_col)?;
-    draw::draw_device_info(&mut output, t_col, cols, dev_info)?;
-    draw::draw_footer(&mut output, cols, t_col)?;
+    draw_header(&mut output, cols, t_col)?;
+    draw_device_info(&mut output, t_col, cols, dev_info)?;
+    draw_footer(&mut output, cols, t_col)?;
     output.flush()?;
     Ok(())
 }
 
-pub(crate) fn get_width(device_info: &[RowItem]) -> (u16, u16) {
+fn get_width(device_info: &[RowItem]) -> (u16, u16) {
     let t_col = device_info
         .iter()
         .map(|i| match i {
@@ -68,42 +61,11 @@ pub(crate) fn get_width(device_info: &[RowItem]) -> (u16, u16) {
     (width as u16, t_col as u16)
 }
 
-pub(crate) fn round_up(i: usize) -> usize {
+fn round_up(i: usize) -> usize {
     (i / 4 + 2) * 4
 }
 
-pub(crate) fn format_loads(loads: &[u64; 3]) -> String {
-    if cfg!(target_os = "linux") {
-        let loads_linux = [
-            loads[0] as f64 / 65536.,
-            loads[1] as f64 / 65536.,
-            loads[2] as f64 / 65536.,
-        ];
-
-        format!(
-            "{:.2}, {:.2}, {:.2}",
-            loads_linux[0], loads_linux[1], loads_linux[2]
-        )
-    } else {
-        format!("{}, {}, {}", loads[0], loads[1], loads[2])
-    }
-}
-
-pub(crate) fn format_duration(input: TimeDelta) -> String {
-    let day_part = if input.num_days() > 0 {
-        format!("{} days, ", input.num_days())
-    } else if input.num_days() == 1 {
-        "1 day, ".to_string()
-    } else {
-        "".to_string()
-    };
-
-    let time_part = format!("{}:{:02}", input.num_hours() % 24, input.num_minutes() % 60);
-
-    format!("{}{}", day_part, time_part)
-}
-
-pub(crate) fn draw_header(output: &mut dyn Write, width: u16, t_col: u16) -> io::Result<()> {
+fn draw_header(output: &mut dyn Write, width: u16, t_col: u16) -> io::Result<()> {
     output.queue(Print('┌'))?;
     for _i in 1..width - 1 {
         output.queue(Print('┬'))?;
@@ -122,9 +84,9 @@ pub(crate) fn draw_header(output: &mut dyn Write, width: u16, t_col: u16) -> io:
     let now = Local::now();
     let timezone = get_timezone();
     let time_string = if let Ok(zone) = timezone {
-            format!("{} ({})", now.format("%c"), zone)
+        format!("{} ({})", now.format("%c"), zone)
     } else {
-         now.format("%c").to_string()
+        now.format("%c").to_string()
     };
 
     print_centered(output, width, time_string.italic())?;
@@ -160,7 +122,7 @@ fn print_centered<D: Display>(
     Ok(())
 }
 
-pub(crate) fn draw_footer(output: &mut dyn Write, width: u16, t_col: u16) -> io::Result<()> {
+fn draw_footer(output: &mut dyn Write, width: u16, t_col: u16) -> io::Result<()> {
     output.queue(Print('└'))?;
     for _i in 1..width - 1 {
         output.queue(Print('─'))?;
@@ -175,7 +137,7 @@ pub(crate) fn draw_footer(output: &mut dyn Write, width: u16, t_col: u16) -> io:
     Ok(())
 }
 
-pub(crate) fn draw_device_info(
+fn draw_device_info(
     output: &mut dyn Write,
     t_col: u16,
     width: u16,

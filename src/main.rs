@@ -1,6 +1,6 @@
 use std::io::stdout;
 
-use crate::draw::draw_report;
+use crate::{device_info::get_device_info, draw::draw_report};
 
 mod device_info;
 mod draw;
@@ -13,7 +13,7 @@ enum RowItem {
 fn main() -> anyhow::Result<()> {
     let output = stdout();
 
-    let dev_info = device_info::get_device_info()?;
+    let dev_info = get_device_info()?;
 
     draw_report(output, dev_info)?;
 
