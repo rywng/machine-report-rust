@@ -155,7 +155,7 @@ pub(crate) fn draw_device_info(
                     .queue(MoveToColumn(t_col))?
                     .queue(Print('│'))?
                     .queue(MoveRight(1))?
-                    .queue(PrintStyledContent(v.italic()))?
+                    .queue(Print(v))?
                     .queue(MoveToColumn(width - 1))?
                     .queue(Print('│'))?
                     .queue(MoveToNextLine(1))?;
