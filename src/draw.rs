@@ -1,5 +1,6 @@
 use chrono::TimeDelta;
 use crossterm::QueueableCommand;
+use crossterm::cursor;
 use crossterm::cursor::MoveRight;
 
 use crossterm::cursor::MoveToColumn;
@@ -9,6 +10,7 @@ use crossterm::style::PrintStyledContent;
 
 use crossterm::style::Print;
 use crossterm::style::Stylize;
+use crossterm::terminal;
 use crossterm::terminal::ScrollUp;
 
 use std::io;
@@ -24,12 +26,16 @@ pub fn draw_report(
 ) -> Result<(), anyhow::Error> {
     let (cols, t_col) = get_width(&dev_info);
 
-    let lines_needed: u16 = dev_info.len() as u16 + 5; // 2x content top / bottom divider, 3x header
+    let lines_needed: u16 = dev_info.len() as u16 + 6; // 2x content top / bottom divider, 3x header, 1x newline
+    let remaining_lines: u16 = terminal::size()?.1 - cursor::position()?.1;
 
-    output
-        .queue(ScrollUp(lines_needed))?
-        .queue(MoveUp(lines_needed))?
-        .queue(MoveToColumn(0))?;
+    if remaining_lines < lines_needed {
+        output
+            .queue(ScrollUp(lines_needed - remaining_lines))?
+            .queue(MoveUp(lines_needed - remaining_lines))?;
+    }
+
+    output.queue(MoveToColumn(0))?;
     draw::draw_header(&mut output, cols, t_col)?;
     draw::draw_device_info(&mut output, t_col, cols, dev_info)?;
     draw::draw_footer(&mut output, cols, t_col)?;
