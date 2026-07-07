@@ -1,3 +1,4 @@
+use chrono::Local;
 use chrono::TimeDelta;
 use crossterm::QueueableCommand;
 use crossterm::cursor;
@@ -6,13 +7,15 @@ use crossterm::cursor::MoveRight;
 use crossterm::cursor::MoveToColumn;
 use crossterm::cursor::MoveToNextLine;
 use crossterm::cursor::MoveUp;
-use crossterm::style::PrintStyledContent;
 
 use crossterm::style::Print;
+use crossterm::style::StyledContent;
 use crossterm::style::Stylize;
 use crossterm::terminal;
 use crossterm::terminal::ScrollUp;
+use iana_time_zone::get_timezone;
 
+use std::fmt::Display;
 use std::io;
 use std::io::Write;
 
@@ -115,14 +118,16 @@ pub(crate) fn draw_header(output: &mut dyn Write, width: u16, t_col: u16) -> io:
 
     let header_title = "Machine Report";
 
-    let center_loc: u16 = width / 2 - header_title.len() as u16 / 2;
-    output
-        .queue(Print('│'))?
-        .queue(MoveToColumn(center_loc))?
-        .queue(PrintStyledContent(header_title.bold()))?
-        .queue(MoveToColumn(width - 1))?
-        .queue(Print('│'))?
-        .queue(MoveToNextLine(1))?;
+    print_centered(output, width, header_title.bold())?;
+    let now = Local::now();
+    let timezone = get_timezone();
+    let time_string = if let Ok(zone) = timezone {
+            format!("{} ({})", now.format("%c"), zone)
+    } else {
+         now.format("%c").to_string()
+    };
+
+    print_centered(output, width, time_string.italic())?;
 
     output.queue(Print('├'))?;
     for _i in 1..width - 1 {
@@ -135,6 +140,23 @@ pub(crate) fn draw_header(output: &mut dyn Write, width: u16, t_col: u16) -> io:
         .queue(Print('┬'))?
         .queue(MoveToNextLine(1))?;
 
+    Ok(())
+}
+
+fn print_centered<D: Display>(
+    output: &mut dyn Write,
+    width: u16,
+    header_title: StyledContent<D>,
+) -> Result<(), io::Error> {
+    let center_loc: u16 = width / 2 - header_title.content().to_string().len() as u16 / 2;
+
+    output
+        .queue(Print('│'))?
+        .queue(MoveToColumn(center_loc))?
+        .queue(Print(header_title))?
+        .queue(MoveToColumn(width - 1))?
+        .queue(Print('│'))?
+        .queue(MoveToNextLine(1))?;
     Ok(())
 }
 
