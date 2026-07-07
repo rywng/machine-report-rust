@@ -29,7 +29,7 @@ pub fn draw_report(
 ) -> Result<(), anyhow::Error> {
     let (cols, t_col) = get_width(&dev_info);
 
-    let lines_needed: u16 = dev_info.len() as u16 + 6; // 2x content top / bottom divider, 3x header, 1x newline
+    let lines_needed: u16 = dev_info.len() as u16 + 7; // 2x content top / bottom divider, 4x header, 1x newline
     let remaining_lines: u16 = terminal::size()?.1 - cursor::position()?.1;
 
     if remaining_lines < lines_needed {
