@@ -9,6 +9,6 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.103"
-chrono = { version = "0.4.45", features = ["alloc"] }
+chrono = { version = "0.4.45", features = ["alloc"], default-features = false }
 crossterm = "0.29.0"
-rustix = { version = "1.1.4", features = ["system"] }
+rustix = { version = "1.1.4", features = ["system"], default-features = false }
